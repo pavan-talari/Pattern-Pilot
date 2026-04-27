@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattern Pilot — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232633;
+    --surface3: #2a2d3e;
+    --border: #2d3045;
+    --text: #e1e4ed;
+    --text-dim: #8b8fa3;
+    --text-faint: #5c5f73;
+    --accent: #6c63ff;
+    --accent-glow: rgba(108, 99, 255, 0.15);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --yellow: #eab308;
+    --yellow-bg: rgba(234,179,8,0.12);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --orange: #f97316;
+    --orange-bg: rgba(249,115,22,0.12);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59,130,246,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  header h1 .logo {
+    width: 28px; height: 28px; background: var(--accent); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; color: white;
+  }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .status-badge { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+  .status-dot.connected { background: var(--green); }
+  .refresh-btn {
+    padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text-dim); font-size: 12px; cursor: pointer;
+  }
+  .refresh-btn:hover { background: var(--surface3); color: var(--text); }
+  .auto-refresh-toggle {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-dim);
+    user-select: none;
+  }
+  .auto-refresh-toggle input {
+    width: 14px; height: 14px; accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .last-updated {
+    font-size: 12px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+  }
+  .tab {
+    padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+  /* Stat cards */
+  .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-card .value { font-size: 26px; font-weight: 700; }
+  .stat-card .sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.yellow { color: var(--yellow); }
+  .stat-card .value.red { color: var(--red); }
+  .stat-card .value.blue { color: var(--blue); }
+
+  /* Panels */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 14px; font-weight: 600; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel h2 .count {
+    background: var(--surface2); padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; color: var(--text-dim);
+  }
+  .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .panel-full { grid-column: 1 / -1; }
+
+  /* Review table */
+  .review-table { width: 100%; border-collapse: collapse; }
+  .review-table th {
+    text-align: left; font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid var(--border);
+  }
+  .review-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .review-table tr:last-child td { border-bottom: none; }
+  .review-table tr.clickable { cursor: pointer; transition: background 0.1s; }
+  .review-table tr.clickable:hover { background: var(--surface2); }
+
+  /* Verdict & tier badges */
+  .badge {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; white-space: nowrap;
+  }
+  .badge.pass { background: var(--green-bg); color: var(--green); }
+  .badge.passed { background: var(--green-bg); color: var(--green); }
+  .badge.pass_with_advisories { background: var(--yellow-bg); color: var(--yellow); }
+  .badge.passed_with_advisories { background: var(--yellow-bg); color: var(--yellow); }
+  .badge.blocking { background: var(--red-bg); color: var(--red); }
+  .badge.requires_human_review { background: var(--orange-bg); color: var(--orange); }
+  .badge.escalated { background: var(--orange-bg); color: var(--orange); }
+  .badge.running { background: var(--accent-glow); color: var(--accent); }
+  .badge.failed { background: var(--red-bg); color: var(--red); }
+  .badge.reviewer_error { background: var(--blue-bg); color: var(--blue); }
+  .badge.deterministic_gate { background: var(--orange-bg); color: var(--orange); }
+  .badge.pending { background: var(--surface2); color: var(--text-dim); }
+  .badge.blocked { background: var(--red-bg); color: var(--red); }
+  .badge.abandoned { background: var(--surface2); color: var(--text-faint); }
+
+  .badge.tier-blocking { background: var(--red-bg); color: var(--red); }
+  .badge.tier-recommended_autofix { background: var(--orange-bg); color: var(--orange); }
+  .badge.tier-recommended_review { background: var(--yellow-bg); color: var(--yellow); }
+  .badge.tier-advisory { background: var(--blue-bg); color: var(--blue); }
+
+  .badge.status-open { background: var(--red-bg); color: var(--red); }
+  .badge.status-fixed { background: var(--green-bg); color: var(--green); }
+  .badge.status-waived { background: var(--yellow-bg); color: var(--yellow); }
+
+  /* Detail drawer */
+  .detail-drawer {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-bottom: 16px;
+    animation: slideIn 0.2s ease-out;
+  }
+  .detail-drawer.open { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .drawer-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+  .drawer-title { font-size: 16px; font-weight: 600; }
+  .drawer-meta { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .drawer-close {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-dim); padding: 4px 12px; font-size: 12px; cursor: pointer;
+  }
+  .drawer-close:hover { background: var(--surface3); color: var(--text); }
+
+  /* Round timeline */
+  .round-timeline { margin-bottom: 20px; }
+  .round-item {
+    display: flex; gap: 16px; padding: 14px 16px; margin-bottom: 8px;
+    background: var(--surface2); border-radius: 8px; align-items: flex-start;
+  }
+  .round-num {
+    min-width: 36px; height: 36px; background: var(--accent-glow); color: var(--accent);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .round-body { flex: 1; }
+  .round-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .round-stats { font-size: 12px; color: var(--text-dim); display: flex; gap: 14px; }
+  .round-stats span { display: flex; align-items: center; gap: 4px; }
+
+  /* Finding cards */
+  .finding-card {
+    padding: 14px 16px; background: var(--surface2); border-radius: 8px;
+    margin-bottom: 8px; border-left: 3px solid var(--text-dim);
+  }
+  .finding-card.tier-blocking { border-left-color: var(--red); }
+  .finding-card.tier-recommended_autofix { border-left-color: var(--orange); }
+  .finding-card.tier-recommended_review { border-left-color: var(--yellow); }
+  .finding-card.tier-advisory { border-left-color: var(--blue); }
+  .finding-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .finding-file { font-size: 12px; color: var(--accent); font-family: monospace; }
+  .finding-msg { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .finding-suggestion {
+    margin-top: 8px; padding: 10px 12px; background: var(--surface); border-radius: 6px;
+    font-size: 12px; color: var(--text-dim); border: 1px solid var(--border);
+  }
+  .finding-suggestion strong { color: var(--green); }
+
+  /* Event log */
+  .event-item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-time { font-size: 11px; color: var(--text-faint); min-width: 140px; font-family: monospace; }
+  .event-type {
+    font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 3px;
+    background: var(--surface2); color: var(--text-dim); white-space: nowrap;
+  }
+  .event-detail { color: var(--text-dim); flex: 1; }
+
+  /* Onboard form */
+  .onboard-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .onboard-section h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .onboard-intro { color: var(--text-dim); font-size: 12px; line-height: 1.5; margin-bottom: 16px; }
+  .form-section-title {
+    margin: 14px 0 8px; font-size: 11px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
+  }
+  .form-row { display: flex; gap: 12px; margin-bottom: 10px; }
+  .form-field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .form-field label {
+    font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .form-row input, .form-row select {
+    flex: 1; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px; outline: none;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+  button.primary {
+    padding: 8px 20px; background: var(--accent); color: white; border: none;
+    border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  button.primary:hover { opacity: 0.85; }
+  button.secondary {
+    padding: 8px 16px; background: var(--surface2); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  button.secondary:hover { background: var(--surface3); color: var(--text); }
+
+  /* Project card */
+  .project-card {
+    padding: 14px 16px; background: var(--surface2); border-radius: 8px; margin-bottom: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .project-card:hover { background: var(--accent-glow); }
+  .project-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .project-meta { font-size: 12px; color: var(--text-dim); display: flex; gap: 12px; flex-wrap: wrap; }
+  .project-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    background: var(--accent-glow); color: var(--accent);
+  }
+  .model-strip {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+    color: var(--text-dim); font-size: 11px;
+  }
+  .model-pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px;
+    border-radius: 6px; background: var(--blue-bg); color: var(--blue);
+    border: 1px solid rgba(59,130,246,0.22); font-size: 11px; font-weight: 600;
+  }
+  .model-edit {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 6px; padding: 4px 7px; cursor: pointer; font-size: 11px;
+  }
+  .model-edit:hover { color: var(--text); background: var(--surface3); }
+  .model-select {
+    flex: 1; min-width: 160px; padding: 8px 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+    font-size: 13px; outline: none;
+  }
+  .model-note { font-size: 11px; color: var(--text-faint); margin: 4px 0 12px; }
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 90; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    width: min(560px, 100%); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  /* Chart */
+  .chart-container { height: 200px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; padding: 12px 20px;
+    border-radius: 8px; font-size: 13px; z-index: 100;
+    transform: translateY(100px); opacity: 0; transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: rgba(34,197,94,0.9); color: white; }
+  .toast.error { background: rgba(239,68,68,0.9); color: white; }
+
+  .empty-state { text-align: center; padding: 32px; color: var(--text-dim); font-size: 13px; }
+  .mono { font-family: monospace; font-size: 12px; }
+  .dim { color: var(--text-dim); }
+  .nowrap { white-space: nowrap; }
+
+  /* Docs */
+  .doc-hero {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px; margin-bottom: 16px;
+  }
+  .doc-kicker {
+    color: var(--accent); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+  }
+  .doc-title { font-size: 30px; line-height: 1.15; margin-bottom: 10px; max-width: 820px; }
+  .doc-copy { color: var(--text-dim); font-size: 14px; line-height: 1.65; max-width: 880px; }
+  .doc-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .doc-badge {
+    padding: 6px 10px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text-dim); font-size: 12px;
+  }
+  .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .doc-wide { grid-column: 1 / -1; }
+  .doc-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  }
+  .doc-panel h2 { font-size: 15px; margin-bottom: 14px; }
+  .doc-panel h3 { font-size: 13px; margin-bottom: 6px; }
+  .doc-panel p, .doc-panel li { color: var(--text-dim); font-size: 13px; line-height: 1.55; }
+  .doc-panel ul { padding-left: 18px; display: grid; gap: 8px; }
+  .doc-flow {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    align-items: stretch; margin-top: 10px;
+  }
+  .doc-node {
+    position: relative; min-height: 118px; padding: 16px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  }
+  .doc-node::after {
+    content: "->"; position: absolute; right: -14px; top: 48px;
+    color: var(--text-faint); font-size: 12px; font-family: monospace;
+  }
+  .doc-node:last-child::after { content: ""; }
+  .doc-icon {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 12px;
+    background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(108,99,255,0.35);
+  }
+  .doc-icon.green { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,0.28); }
+  .doc-icon.yellow { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(234,179,8,0.28); }
+  .doc-icon.blue { background: var(--blue-bg); color: var(--blue); border-color: rgba(59,130,246,0.28); }
+  .doc-icon.orange { background: var(--orange-bg); color: var(--orange); border-color: rgba(249,115,22,0.28); }
+  .doc-compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .doc-compare-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .doc-compare-box.good { border-color: rgba(34,197,94,0.35); }
+  .doc-boundary {
+    display: grid; grid-template-columns: 1fr 56px 1fr; gap: 14px; align-items: stretch;
+  }
+  .doc-boundary-side {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .doc-boundary-mid {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint); font-family: monospace; font-size: 18px;
+  }
+  .doc-lane {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;
+  }
+  .doc-lane-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+  }
+  .doc-mini-flow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .doc-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-dim); border-radius: 6px; padding: 6px 9px; font-size: 12px;
+  }
+  .doc-verdicts {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+  .doc-verdict {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .panel-grid { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; }
+    .doc-grid, .doc-compare, .doc-boundary, .doc-lane, .doc-flow, .doc-verdicts {
+      grid-template-columns: 1fr;
+    }
+    .doc-node::after { content: ""; }
+    .doc-title { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">PP</span> Pattern Pilot</h1>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
+    <label class="auto-refresh-toggle" for="autoRefreshToggle">
+      <input
+        id="autoRefreshToggle"
+        type="checkbox"
+        onchange="onAutoRefreshToggle(this.checked)"
+      />
+      Auto refresh (30s)
+    </label>
+    <span class="last-updated" id="lastUpdatedText">Last updated: —</span>
+    <div class="status-badge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+  <div class="tab" data-tab="reviews" onclick="switchTab('reviews')">Reviews &amp; Audit</div>
+  <div class="tab" data-tab="findings" onclick="switchTab('findings')">Findings</div>
+  <div class="tab" data-tab="events" onclick="switchTab('events')">Event Log</div>
+  <div class="tab" data-tab="docs" onclick="switchTab('docs')">Docs</div>
+  <div class="tab" data-tab="onboard" onclick="switchTab('onboard')">Onboard</div>
+</div>
+
+<!-- ────── OVERVIEW TAB ────── -->
+<div class="tab-content active" id="tab-overview">
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Projects</div>
+      <div class="value" id="statProjects">—</div>
+      <div class="sub">onboarded</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Completed Reviews</div>
+      <div class="value blue" id="statReviews">—</div>
+      <div class="sub" id="statReviewsSub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Deterministic Gates</div>
+      <div class="value" style="color:var(--orange)" id="statDeterministic">—</div>
+      <div class="sub">caught before LLM review</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Pass Rate</div>
+      <div class="value green" id="statPassRate">—</div>
+      <div class="sub" id="statPassRateSub">completed reviews</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Findings</div>
+      <div class="value yellow" id="statFindings">—</div>
+      <div class="sub">completed reviews</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Cost</div>
+      <div class="value" id="statCost">—</div>
+      <div class="sub">OpenAI usage</div>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+    <div class="panel">
+      <h2>Projects <span class="count" id="projectCount">0</span></h2>
+      <div id="projectList"><div class="empty-state">No projects onboarded yet</div></div>
+    </div>
+    <div class="panel">
+      <h2>Verdict Distribution</h2>
+      <div class="chart-container"><canvas id="verdictChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Round Distribution</h2>
+    <div id="roundDistribution"><div class="empty-state">No completed reviews yet</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Recent Reviews <span class="count" id="recentReviewCount">0</span></h2>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Verdict</th>
+          <th>Project</th>
+          <th>Task</th>
+          <th>Profile</th>
+          <th>Rounds</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody id="recentReviewBody"></tbody>
+    </table>
+    <div id="recentReviewEmpty" class="empty-state" style="display:none;">No reviews yet</div>
+  </div>
+</div>
+</div>
+
+<!-- ────── REVIEWS & AUDIT TAB ────── -->
+<div class="tab-content" id="tab-reviews">
+<div class="container">
+  <div class="panel">
+    <h2>All Review Runs <span class="count" id="allReviewCount">0</span></h2>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>Verdict</th>
+          <th>Status</th>
+          <th>Project</th>
+          <th>Task Ref</th>
+          <th>Profile</th>
+          <th>Rounds</th>
+          <th>Submissions</th>
+          <th>Started</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+      <tbody id="allReviewBody"></tbody>
+    </table>
+    <div id="allReviewEmpty" class="empty-state" style="display:none;">No reviews yet</div>
+  </div>
+
+  <div class="detail-drawer" id="reviewDrawer">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title" id="drawerTitle">Review Detail</div>
+        <div class="drawer-meta" id="drawerMeta"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">Close</button>
+    </div>
+    <div id="drawerRounds"><div class="empty-state">Loading rounds...</div></div>
+    <h3 style="font-size:13px; margin: 16px 0 10px; color: var(--text-dim);">Findings in this review</h3>
+    <div id="drawerFindings"><div class="empty-state">No findings</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ────── FINDINGS TAB ────── -->
+<div class="tab-content" id="tab-findings">
+<div class="container">
+  <div class="stats-grid" style="grid-template-columns: repeat(4,1fr); margin-bottom: 16px;">
+    <div class="stat-card">
+      <div class="label">Blocking</div>
+      <div class="value red" id="findBlockingCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Autofix</div>
+      <div class="value" style="color:var(--orange)" id="findAutofixCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Review</div>
+      <div class="value yellow" id="findReviewCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Advisory</div>
+      <div class="value blue" id="findAdvisoryCount">0</div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Evaluated Findings <span class="count" id="totalFindingCount">0</span></h2>
+    <div id="allFindingsList"><div class="empty-state">No findings yet</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ────── EVENT LOG TAB ────── -->
+<div class="tab-content" id="tab-events">
+<div class="container">
+  <div class="panel">
+    <h2>Audit Event Log <span class="count" id="eventCount">0</span></h2>
+    <div id="eventList"><div class="empty-state">No events yet</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ────── DOCS TAB ────── -->
+<div class="tab-content" id="tab-docs">
+<div class="container">
+  <div class="doc-hero">
+    <div class="doc-kicker">Independent quality control plane</div>
+    <div class="doc-title">Pattern Pilot gives the builder a second model that reviews the same codebase from a clean QC boundary.</div>
+    <p class="doc-copy">
+      Codex builds inside the target project. Pattern Pilot reviews that work from the same repository context,
+      the same Git diff, and the same governance rules, while keeping review state in its own database.
+      The target project stays the source of truth for code and workflow; Pattern Pilot owns only QC memory.
+    </p>
+    <div class="doc-badges">
+      <span class="doc-badge">Shared repo access</span>
+      <span class="doc-badge">Git-scoped diffs</span>
+      <span class="doc-badge">Independent reviewer model</span>
+      <span class="doc-badge">Pattern Pilot audit trail</span>
+      <span class="doc-badge">No target-project writes</span>
+    </div>
+  </div>
+
+  <div class="doc-panel doc-wide">
+    <h2>End-to-end review loop</h2>
+    <div class="doc-flow">
+      <div class="doc-node">
+        <div class="doc-icon green">CODE</div>
+        <h3>Builder writes</h3>
+        <p>Codex edits the target project with the same workspace and repository access used for normal development.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon blue">GIT</div>
+        <h3>Git defines scope</h3>
+        <p>Changed files, diffs, branch state, and task references define what needs review.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon yellow">QC</div>
+        <h3>Pattern Pilot packages context</h3>
+        <p>Deterministic checks, changed code, dependencies, and governance are bundled into one review request.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon orange">LLM</div>
+        <h3>Independent model reviews</h3>
+        <p>A separate reviewer model evaluates correctness, safety, governance, and maintainability.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon">DB</div>
+        <h3>Results become memory</h3>
+        <p>Runs, rounds, findings, advisories, costs, and events are stored in Pattern Pilot's own database.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-panel doc-wide">
+    <h2>Configurable reviewer model</h2>
+    <div class="doc-flow">
+      <div class="doc-node">
+        <div class="doc-icon green">BUILD</div>
+        <h3>Builder model</h3>
+        <p>Codex, Claude, Gemini, or another coding model can produce the change inside the target repo.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon blue">SET</div>
+        <h3>Onboard config</h3>
+        <p>Pattern Pilot stores the reviewer provider, model, and reasoning effort on the project record.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon yellow">QC</div>
+        <h3>Reviewer model</h3>
+        <p>The selected independent model reviews the builder's output using the same code and Git scope.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon orange">EDIT</div>
+        <h3>Runtime changes</h3>
+        <p>The Overview card can change future review runs without rebuilding the app.</p>
+      </div>
+      <div class="doc-node">
+        <div class="doc-icon">LOG</div>
+        <h3>Audit trail</h3>
+        <p>Each round stores the model used, keeping review history traceable even after config changes.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-grid">
+    <div class="doc-panel">
+      <h2>Builder and reviewer share code access</h2>
+      <div class="doc-lane">
+        <div class="doc-lane-item">
+          <div class="doc-icon green">BUILD</div>
+          <h3>Codex builder</h3>
+          <p>Edits files, runs fixes, responds to blocking findings, and resubmits until the task converges.</p>
+        </div>
+        <div class="doc-lane-item">
+          <div class="doc-icon yellow">REVIEW</div>
+          <h3>Pattern Pilot reviewer</h3>
+          <p>Reads the same files and Git context, but does not edit the target project.</p>
+        </div>
+      </div>
+      <div class="doc-mini-flow">
+        <span class="doc-chip">Same workspace</span>
+        <span class="doc-chip">Same changed files</span>
+        <span class="doc-chip">Same governance</span>
+        <span class="doc-chip">Different responsibility</span>
+      </div>
+    </div>
+
+    <div class="doc-panel">
+      <h2>Git is the handshake</h2>
+      <p>
+        Git gives Pattern Pilot a concrete review surface. Instead of asking the reviewer to understand
+        the whole world every time, the review starts from what actually changed.
+      </p>
+      <div class="doc-mini-flow">
+        <span class="doc-chip">Branch</span>
+        <span class="doc-chip">Diff</span>
+        <span class="doc-chip">Changed files</span>
+        <span class="doc-chip">Task reference</span>
+        <span class="doc-chip">Resubmit history</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-panel doc-wide">
+    <h2>Traditional QC vs Pattern Pilot</h2>
+    <div class="doc-compare">
+      <div class="doc-compare-box">
+        <h3>Traditional loop</h3>
+        <ul>
+          <li>The same development context often produces and validates the change.</li>
+          <li>Review history is scattered across chat, PR comments, terminal output, and memory.</li>
+          <li>Governance depends on whether the reviewer remembered the right project rules.</li>
+          <li>Metrics are hard to recover after the task is done.</li>
+        </ul>
+      </div>
+      <div class="doc-compare-box good">
+        <h3>Pattern Pilot loop</h3>
+        <ul>
+          <li>The builder writes code; an independent reviewer model evaluates the result.</li>
+          <li>Every run, round, finding, advisory, and event is stored in Pattern Pilot.</li>
+          <li>Project governance is loaded into the review bundle on purpose.</li>
+          <li>Pass rate, round count, findings, cost, and audit history stay queryable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-grid">
+    <div class="doc-panel">
+      <h2>Truth boundaries</h2>
+      <div class="doc-boundary">
+        <div class="doc-boundary-side">
+          <div class="doc-icon green">APP</div>
+          <h3>Target project owns</h3>
+          <ul>
+            <li>Source code</li>
+            <li>Git branches</li>
+            <li>Tasks and workflow</li>
+            <li>Governance files</li>
+          </ul>
+        </div>
+        <div class="doc-boundary-mid">||</div>
+        <div class="doc-boundary-side">
+          <div class="doc-icon">PP</div>
+          <h3>Pattern Pilot owns</h3>
+          <ul>
+            <li>Review runs</li>
+            <li>Review rounds</li>
+            <li>Findings and advisories</li>
+            <li>Metrics and audit events</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-panel">
+      <h2>Integration surfaces</h2>
+      <ul>
+        <li><strong>MCP:</strong> Codex calls Pattern Pilot without leaving the coding workspace.</li>
+        <li><strong>API:</strong> The dashboard, onboarding, metrics, reviews, and advisories use FastAPI.</li>
+        <li><strong>Postgres:</strong> Pattern Pilot stores its own QC history outside the target project.</li>
+        <li><strong>Connectors:</strong> Project adapters read files, governance, dependencies, and context.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-panel doc-wide">
+    <h2>Verdict behavior</h2>
+    <div class="doc-verdicts">
+      <div class="doc-verdict">
+        <span class="badge blocking">BLOCKING</span>
+        <p>Must be fixed. The builder applies changes and resubmits.</p>
+      </div>
+      <div class="doc-verdict">
+        <span class="badge pass_with_advisories">PASS_WITH_ADVISORIES</span>
+        <p>Accepted with notes that remain visible for future review.</p>
+      </div>
+      <div class="doc-verdict">
+        <span class="badge pass">PASS</span>
+        <p>Clean completion. The task exits the QC loop.</p>
+      </div>
+      <div class="doc-verdict">
+        <span class="badge failed">FAILED</span>
+        <p>Infrastructure blocked evaluation. This is not a code-quality failure.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ────── ONBOARD TAB ────── -->
+<div class="tab-content" id="tab-onboard">
+<div class="container">
+  <div class="onboard-section">
+    <h2>Onboard New Project</h2>
+    <p class="onboard-intro">
+      Register a target repository with Pattern Pilot. Onboarding stores the project path,
+      scans the tech stack, attaches governance paths, and sets the reviewer model used for future QC runs.
+    </p>
+    <div class="form-section-title">Project registration</div>
+    <div class="form-row">
+      <input type="text" id="onboardName" placeholder="Project name (e.g., story-engine)">
+      <input type="text" id="onboardPath" placeholder="Repository path inside Docker (e.g., /projects/story-engine)">
+    </div>
+    <div class="form-row">
+      <input type="text" id="onboardGov" placeholder="Governance paths (comma-separated, optional)">
+      <button class="primary" onclick="onboardProject()">Onboard</button>
+    </div>
+    <div class="form-section-title">QC reviewer model</div>
+    <div class="form-row">
+      <div class="form-field">
+        <label for="onboardProvider">Reviewer provider</label>
+        <select id="onboardProvider" onchange="onModelProviderChange('onboard')"></select>
+      </div>
+      <div class="form-field">
+        <label for="onboardModel">Reviewer model</label>
+        <select id="onboardModel"></select>
+      </div>
+      <div class="form-field">
+        <label for="onboardEffort">Reasoning effort</label>
+        <select id="onboardEffort">
+          <option value="low">low</option>
+          <option value="medium">medium</option>
+          <option value="high">high</option>
+        </select>
+      </div>
+    </div>
+    <div class="model-note">
+      Optional project-level QC setting. The builder can be Codex, Claude, Gemini, or another coding agent;
+      this selects the independent Pattern Pilot reviewer for future reviews.
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Registered Projects</h2>
+    <div class="onboard-intro" style="margin-bottom:12px;">
+      Archive hides a project from active registrations only. Existing review history,
+      findings, advisories, and metrics stay preserved in Pattern Pilot.
+    </div>
+    <div id="onboardProjectList"><div class="empty-state">No projects</div></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="modelModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reviewer Model</div>
+        <div class="model-note" id="modelModalProject">Project</div>
+      </div>
+      <button class="drawer-close" onclick="closeModelModal()">Close</button>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label for="editProvider">Provider</label>
+        <select id="editProvider" class="model-select" onchange="onModelProviderChange('edit')"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label for="editModel">Model</label>
+        <select id="editModel" class="model-select"></select>
+      </div>
+      <div class="form-field">
+        <label for="editEffort">Reasoning effort</label>
+        <select id="editEffort" class="model-select">
+          <option value="low">low</option>
+          <option value="medium">medium</option>
+          <option value="high">high</option>
+        </select>
+      </div>
+    </div>
+    <div class="model-note">
+      Changes apply to future review runs. Past rounds keep the model that was used at review time.
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModelModal()">Cancel</button>
+      <button class="primary" onclick="saveProjectModel()">Save model</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8100';
+let verdictChart = null;
+let allProjects = [];
+let allRuns = [];
+let allFindingsGlobal = [];
+let providerConfig = null;
+let editingModelProjectId = null;
+let autoRefreshIntervalId = null;
+const AUTO_REFRESH_MS = 30000;
+const AUTO_REFRESH_STORAGE_KEY = 'pp.autoRefresh30s';
+
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+async function apiFetch(path) {
+  const res = await fetch(`${API}${path}`);
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || res.status); }
+  return res.json();
+}
+
+async function apiPatch(path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || res.status); }
+  return res.json();
+}
+
+async function apiDelete(path) {
+  const res = await fetch(`${API}${path}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 204) throw new Error(res.status);
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateLastUpdatedTimestamp() {
+  const el = document.getElementById('lastUpdatedText');
+  if (!el) return;
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  el.textContent = `Last updated: ${time}`;
+}
+
+function setAutoRefresh(enabled) {
+  if (autoRefreshIntervalId) {
+    clearInterval(autoRefreshIntervalId);
+    autoRefreshIntervalId = null;
+  }
+  if (enabled) {
+    autoRefreshIntervalId = setInterval(loadDashboard, AUTO_REFRESH_MS);
+  }
+}
+
+function onAutoRefreshToggle(enabled) {
+  setAutoRefresh(enabled);
+  localStorage.setItem(AUTO_REFRESH_STORAGE_KEY, enabled ? 'true' : 'false');
+  if (enabled) {
+    loadDashboard();
+  }
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function runSortTimestamp(run) {
+  return run.started_at || run.completed_at || run.created_at || '';
+}
+
+function taskGroupKey(run) {
+  const project = run._project_name || run.project_id || 'project';
+  const taskIdentity = (run.task_id || run.task_ref || '').trim().toLowerCase();
+  return `${project}::${taskIdentity}`;
+}
+
+function groupRunsByTask(runs) {
+  const groups = new Map();
+  for (const run of runs) {
+    const key = taskGroupKey(run);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(run);
+  }
+
+  const grouped = [];
+  for (const groupedRuns of groups.values()) {
+    groupedRuns.sort((a, b) => runSortTimestamp(b).localeCompare(runSortTimestamp(a)));
+    const latest = groupedRuns[0];
+    const totalRounds = groupedRuns.reduce((sum, run) => sum + Number(run.total_rounds || 0), 0);
+    const totalSubmissions = groupedRuns.reduce((sum, run) => sum + Number(run.total_submissions || 0), 0);
+    const deterministicRuns = groupedRuns.filter(run => run.failure_kind === 'deterministic_checks').length;
+    grouped.push({
+      ...latest,
+      _group_size: groupedRuns.length,
+      _group_total_rounds: totalRounds,
+      _group_total_submissions: totalSubmissions,
+      _group_deterministic_runs: deterministicRuns,
+      _task_label: latest.task_id || latest.task_ref || '—',
+    });
+  }
+
+  grouped.sort((a, b) => runSortTimestamp(b).localeCompare(runSortTimestamp(a)));
+  return grouped;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function truncateText(value, maxChars = 1600) {
+  const text = String(value ?? '').trim();
+  if (!text || text.length <= maxChars) return text;
+  return `${text.slice(0, maxChars - 3).trimEnd()}...`;
+}
+
+function renderDeterministicFailure(submission) {
+  const failedChecks = (submission?.deterministic_results || []).filter(check => !check.passed);
+  if (!failedChecks.length) {
+    return `
+      <div class="empty-state">
+        Target project deterministic checks failed before LLM review, but no check output was recorded.
+      </div>`;
+  }
+
+  const checkHtml = failedChecks.map(check => `
+    <div class="finding-card" style="border-left-color: var(--red);">
+      <div class="finding-header">
+        <span class="badge blocking">deterministic</span>
+        <span style="font-size:12px;color:var(--text);font-weight:600;">${escapeHtml(check.check_name || 'unknown')}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text-faint);">${Number(check.duration_ms || 0)}ms</span>
+      </div>
+      ${check.output ? `<pre style="margin:10px 0 0;padding:10px;background:var(--surface);border-radius:6px;overflow:auto;white-space:pre-wrap;font-size:11px;line-height:1.45;color:var(--text);">${escapeHtml(truncateText(check.output))}</pre>` : ''}
+    </div>
+  `).join('');
+
+  return `
+    <div class="finding-card" style="border-left-color: var(--yellow);">
+      <div class="finding-msg">
+        Target project deterministic checks failed before round 1. This is a Story Engine code or environment issue, not a Pattern Pilot infrastructure failure.
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">
+        Submission ${submission.submission_number || 1} · ${fmtDate(submission.created_at)}
+      </div>
+    </div>
+    ${checkHtml}
+  `;
+}
+
+function renderReviewerError(run) {
+  const reason = run.failure_reason
+    ? `<pre style="margin:10px 0 0;padding:10px;background:var(--surface);border-radius:6px;overflow:auto;white-space:pre-wrap;font-size:11px;line-height:1.45;color:var(--text);">${escapeHtml(truncateText(run.failure_reason))}</pre>`
+    : '';
+  return `
+    <div class="finding-card" style="border-left-color: var(--blue);">
+      <div class="finding-msg">
+        Reviewer infrastructure was unavailable before LLM review could start. This is a PP reviewer availability issue, not a code-quality failure.
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px;">
+        Run ${run.id} · retryable on the same task
+      </div>
+      ${reason}
+    </div>
+  `;
+}
+
+async function loadProviderConfig() {
+  if (providerConfig) return providerConfig;
+  providerConfig = await apiFetch('/config/providers');
+  populateModelControls('onboard', {});
+  return providerConfig;
+}
+
+function getProvider(providerId) {
+  const providers = providerConfig?.providers || [];
+  return providers.find(p => p.id === providerId) || providers[0] || null;
+}
+
+function populateModelControls(prefix, values = {}) {
+  if (!providerConfig) return;
+  const providerEl = document.getElementById(`${prefix}Provider`);
+  const modelEl = document.getElementById(`${prefix}Model`);
+  const effortEl = document.getElementById(`${prefix}Effort`);
+  if (!providerEl || !modelEl || !effortEl) return;
+
+  const selectedProvider = values.provider || providerConfig.default_provider || 'openai';
+  providerEl.innerHTML = providerConfig.providers.map(provider => {
+    const disabled = provider.available ? '' : 'disabled';
+    const suffix = provider.available || provider.label.includes('future') ? '' : ' (future)';
+    return `<option value="${provider.id}" ${disabled}>${provider.label}${suffix}</option>`;
+  }).join('');
+  providerEl.value = selectedProvider;
+
+  const provider = getProvider(selectedProvider);
+  const selectedModel = values.model || (
+    selectedProvider === providerConfig.default_provider ? providerConfig.default_model : ''
+  );
+  const models = [...(provider?.models || [])];
+  if (selectedModel && !models.includes(selectedModel)) models.unshift(selectedModel);
+  modelEl.innerHTML = models.map(model => `<option value="${model}">${model}</option>`).join('');
+  modelEl.value = selectedModel || models[0] || '';
+
+  const supportsEffort = provider?.supports_reasoning_effort === true;
+  effortEl.disabled = !supportsEffort;
+  effortEl.value = values.effort || providerConfig.default_reasoning_effort || 'medium';
+}
+
+function onModelProviderChange(prefix) {
+  const provider = document.getElementById(`${prefix}Provider`)?.value;
+  populateModelControls(prefix, { provider });
+}
+
+function selectedModelPayload(prefix) {
+  const provider = document.getElementById(`${prefix}Provider`)?.value || 'openai';
+  const model = document.getElementById(`${prefix}Model`)?.value || null;
+  const effortEl = document.getElementById(`${prefix}Effort`);
+  return {
+    reviewer_provider: provider,
+    reviewer_model: model,
+    reviewer_reasoning_effort: effortEl?.disabled ? null : (effortEl?.value || null),
+  };
+}
+
+function projectModelSummary(project) {
+  const providerId = project.reviewer_provider || providerConfig?.default_provider || 'openai';
+  const provider = getProvider(providerId);
+  const providerLabel = provider?.label?.replace(' (future)', '') || providerId;
+  const model = project.reviewer_model || providerConfig?.default_model || 'default model';
+  const effort = project.reviewer_reasoning_effort || providerConfig?.default_reasoning_effort || 'medium';
+  return `${providerLabel} · ${model} · ${effort}`;
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+}
+
+// ── Health ──────────────────────────────────────────────────────────────
+
+async function checkHealth() {
+  try {
+    await apiFetch('/health');
+    document.getElementById('statusDot').classList.add('connected');
+    document.getElementById('statusText').textContent = 'API Connected';
+    return true;
+  } catch {
+    document.getElementById('statusDot').classList.remove('connected');
+    document.getElementById('statusText').textContent = 'API Offline';
+    return false;
+  }
+}
+
+// ── Load Dashboard ──────────────────────────────────────────────────────
+
+async function loadDashboard() {
+  const ok = await checkHealth();
+  if (!ok) return;
+
+  try {
+    await loadProviderConfig();
+
+    // Projects
+    allProjects = await apiFetch('/projects');
+    document.getElementById('statProjects').textContent = allProjects.length;
+    document.getElementById('projectCount').textContent = allProjects.length;
+    renderProjectList('projectList');
+    renderProjectList('onboardProjectList', true);
+
+    // Summary metrics
+    const summary = await apiFetch('/metrics/summary');
+    document.getElementById('statReviews').textContent = summary.completed_runs || 0;
+    document.getElementById('statReviewsSub').textContent =
+      `${summary.total_runs || 0} total · ${summary.abandoned_runs || 0} abandoned hidden`;
+    document.getElementById('statDeterministic').textContent = summary.deterministic_failures || 0;
+    document.getElementById('statPassRate').textContent =
+      summary.completed_runs > 0 ? `${(summary.overall_pass_rate * 100).toFixed(0)}%` : '—';
+    document.getElementById('statPassRateSub').textContent =
+      summary.completed_runs > 0
+        ? `${((summary.first_round_success_rate || 0) * 100).toFixed(0)}% first-round · avg ${summary.avg_rounds || 0} rounds`
+        : 'completed reviews';
+    document.getElementById('statCost').textContent =
+      summary.cost_configured && summary.total_cost_usd != null
+        ? `$${summary.total_cost_usd.toFixed(2)}`
+        : 'n/a';
+    renderRoundDistribution(summary.round_distribution || []);
+
+    // Collect all runs and findings
+    allRuns = [];
+    allFindingsGlobal = [];
+    for (const p of allProjects) {
+      const runs = await apiFetch(`/projects/${p.id}/reviews`);
+      for (const r of runs) {
+        r._project_name = p.name;
+        allRuns.push(r);
+        if (r.status === 'abandoned') continue;
+        try {
+          const findings = await apiFetch(`/reviews/${r.id}/findings`);
+          findings.forEach(f => { f._project_name = p.name; f._task_ref = r.task_ref; f._run_id = r.id; });
+          allFindingsGlobal = allFindingsGlobal.concat(findings);
+        } catch {}
+      }
+    }
+    allRuns.sort((a, b) => runSortTimestamp(b).localeCompare(runSortTimestamp(a)));
+    const evaluatedRuns = allRuns.filter(r => r.status !== 'abandoned');
+    const groupedEvaluatedRuns = groupRunsByTask(evaluatedRuns);
+    const groupedAllRuns = groupRunsByTask(allRuns);
+
+    document.getElementById('statFindings').textContent = allFindingsGlobal.length;
+
+    // Recent reviews (overview)
+    document.getElementById('recentReviewCount').textContent = groupedEvaluatedRuns.length;
+    renderReviewTable('recentReviewBody', 'recentReviewEmpty', groupedEvaluatedRuns.slice(0, 10), false);
+
+    // All reviews (audit tab)
+    document.getElementById('allReviewCount').textContent = groupedAllRuns.length;
+    renderReviewTable('allReviewBody', 'allReviewEmpty', groupedAllRuns, true);
+
+    // Findings tab
+    renderAllFindings();
+
+    // Verdict chart
+    renderVerdictChart(groupedEvaluatedRuns);
+
+    // Event log
+    await loadEventLog();
+    updateLastUpdatedTimestamp();
+
+  } catch (err) {
+    console.error('Dashboard error:', err);
+  }
+}
+
+// ── Renderers ───────────────────────────────────────────────────────────
+
+function renderProjectList(elId, showDelete = false) {
+  const el = document.getElementById(elId);
+  if (!allProjects.length) { el.innerHTML = '<div class="empty-state">No projects onboarded</div>'; return; }
+  el.innerHTML = allProjects.map(p => {
+    const langs = (p.tech_stack?.languages || []).join(', ') || 'scanning...';
+    const govCount = (p.governance_paths || []).length;
+    const modelSummary = projectModelSummary(p);
+    const deleteBtn = showDelete
+      ? `<button class="drawer-close" style="margin-left:auto" onclick="event.stopPropagation();deleteProject('${p.id}','${p.name}')">Archive</button>`
+      : '';
+    return `
+      <div class="project-card" style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1">
+          <div class="project-name">${p.name}</div>
+          <div class="project-meta">
+            <span>${p.connector_type}</span>
+            <span>${langs}</span>
+            <span>${govCount} governance path${govCount !== 1 ? 's' : ''}</span>
+            <span class="mono">${p.repo_path}</span>
+          </div>
+          <div class="model-strip">
+            <span class="model-pill">${modelSummary}</span>
+            <button class="model-edit" onclick="event.stopPropagation();openModelModal('${p.id}')">Edit model</button>
+          </div>
+        </div>
+        <span class="project-tag">${p.connector_type}</span>
+        ${deleteBtn}
+      </div>`;
+  }).join('');
+}
+
+function renderRoundDistribution(distribution) {
+  const el = document.getElementById('roundDistribution');
+  if (!distribution.length) {
+    el.innerHTML = '<div class="empty-state">No completed reviews yet</div>';
+    return;
+  }
+
+  const total = distribution.reduce((sum, row) => sum + row.runs, 0);
+  el.innerHTML = distribution.map(row => {
+    const label = row.total_rounds === 0
+      ? 'No LLM round'
+      : row.total_rounds === 1
+        ? '1 round'
+        : `${row.total_rounds} rounds`;
+    const pct = total > 0 ? Math.round((row.runs / total) * 100) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <div style="width:80px;font-size:12px;color:var(--text-dim);">${label}</div>
+        <div style="flex:1;height:10px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--accent);"></div>
+        </div>
+        <div style="width:150px;font-size:12px;color:var(--text-dim);text-align:right;">
+          ${row.runs} run${row.runs !== 1 ? 's' : ''} · ${row.successful} passed
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderReviewTable(bodyId, emptyId, runs, full) {
+  const body = document.getElementById(bodyId);
+  const empty = document.getElementById(emptyId);
+  if (!runs.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = runs.map(r => {
+    const v = r.verdict || r.status;
+    const reviewerInfra = r.failure_kind === 'reviewer_infrastructure' || v === 'reviewer_error';
+    const verdictBadgeClass = r.failure_kind === 'deterministic_checks'
+      ? 'deterministic_gate'
+      : reviewerInfra
+        ? 'reviewer_error'
+        : v;
+    const verdictBadgeLabel = r.failure_kind === 'deterministic_checks'
+      ? 'deterministic gate'
+      : reviewerInfra
+        ? 'reviewer error'
+        : (v || '—');
+    const statusLabel = r.status === 'reviewer_error' ? 'reviewer error' : r.status;
+    const statusBadge = full ? `<td><span class="badge ${r.status}">${statusLabel}</span></td>` : '';
+    const completedCol = full ? `<td class="nowrap dim">${fmtDateShort(r.completed_at)}</td>` : '';
+    const roundsValue = r._group_total_rounds != null ? r._group_total_rounds : r.total_rounds;
+    const submissionsValue = r._group_total_submissions != null ? r._group_total_submissions : r.total_submissions;
+    const subsCol = full ? `<td>${submissionsValue}</td>` : '';
+    const taskLabel = r._task_label || r.task_id || r.task_ref || '—';
+    const groupedMeta = Number(r._group_size || 1) > 1
+      ? `<div style="font-size:11px;color:var(--text-faint);margin-top:3px;">${r._group_size} runs grouped${r._group_deterministic_runs ? ` · ${r._group_deterministic_runs} deterministic gate` : ''}</div>`
+      : '';
+    return `
+      <tr class="clickable" onclick="openReviewDetail('${r.id}','${r._project_name}','${r.task_ref}')">
+        <td><span class="badge ${verdictBadgeClass}">${verdictBadgeLabel}</span></td>
+        ${statusBadge}
+        <td>${r._project_name}</td>
+        <td class="mono">${taskLabel}${groupedMeta}</td>
+        <td>${r.review_profile}</td>
+        <td>${roundsValue}</td>
+        ${subsCol}
+        <td class="nowrap dim">${fmtDateShort(r.started_at)}</td>
+        ${completedCol}
+      </tr>`;
+  }).join('');
+}
+
+function renderAllFindings() {
+  const el = document.getElementById('allFindingsList');
+  const counts = { blocking: 0, recommended_autofix: 0, recommended_review: 0, advisory: 0 };
+  allFindingsGlobal.forEach(f => { if (f.tier in counts) counts[f.tier]++; });
+
+  document.getElementById('findBlockingCount').textContent = counts.blocking;
+  document.getElementById('findAutofixCount').textContent = counts.recommended_autofix;
+  document.getElementById('findReviewCount').textContent = counts.recommended_review;
+  document.getElementById('findAdvisoryCount').textContent = counts.advisory;
+  document.getElementById('totalFindingCount').textContent = allFindingsGlobal.length;
+
+  if (!allFindingsGlobal.length) { el.innerHTML = '<div class="empty-state">No findings yet — clean code!</div>'; return; }
+
+  el.innerHTML = allFindingsGlobal.map(f => {
+    const sevColor = f.severity === 'high' ? 'var(--red)' : f.severity === 'medium' ? 'var(--yellow)' : 'var(--text-dim)';
+    const confPct = f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '—';
+    const ruleLinks = (f.rule_refs || []).length > 0
+      ? `<div style="font-size:11px;color:var(--accent);margin-top:4px;">Rules: ${f.rule_refs.join(', ')}</div>`
+      : '';
+    const whyNow = f.why_now
+      ? `<div style="font-size:12px;color:var(--text-dim);margin-top:6px;padding:8px 10px;background:var(--surface);border-radius:4px;border-left:2px solid var(--accent);"><strong style="color:var(--text);">Why now:</strong> ${f.why_now}</div>`
+      : '';
+    return `
+    <div class="finding-card tier-${f.tier}">
+      <div class="finding-header">
+        <span class="badge tier-${f.tier}">${f.tier}</span>
+        <span class="badge status-${f.status}">${f.status}</span>
+        <span style="font-size:12px;color:var(--text-dim)">${f.category}</span>
+        <span style="font-size:11px;color:${sevColor};font-weight:600;">${f.severity || 'medium'}</span>
+        <span style="font-size:11px;color:var(--text-faint);" title="Model confidence">conf: ${confPct}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text-faint)">${f._project_name} · ${f._task_ref}</span>
+      </div>
+      <div class="finding-file">${f.file_path}${f.line_start ? ':' + f.line_start : ''}${f.line_end ? '-' + f.line_end : ''}</div>
+      <div class="finding-msg">${f.message}</div>
+      ${whyNow}
+      ${f.suggestion ? `<div class="finding-suggestion"><strong>Suggestion:</strong> ${f.suggestion}</div>` : ''}
+      ${ruleLinks}
+      ${f.autofix_safe ? '<div style="font-size:11px;color:var(--green);margin-top:4px;">Autofix safe</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Review Detail Drawer ────────────────────────────────────────────────
+
+async function openReviewDetail(runId, projectName, taskRef) {
+  switchTab('reviews');
+  const drawer = document.getElementById('reviewDrawer');
+  drawer.classList.add('open');
+  document.getElementById('drawerTitle').textContent = `${projectName} — ${taskRef}`;
+  document.getElementById('drawerMeta').textContent = `Run ID: ${runId}`;
+  document.getElementById('drawerRounds').innerHTML = '<div class="empty-state">Loading...</div>';
+  document.getElementById('drawerFindings').innerHTML = '<div class="empty-state">Loading...</div>';
+
+  try {
+    const [run, rounds, findings, submissions] = await Promise.all([
+      apiFetch(`/reviews/${runId}`),
+      apiFetch(`/reviews/${runId}/rounds`),
+      apiFetch(`/reviews/${runId}/findings`),
+      apiFetch(`/reviews/${runId}/submissions`),
+    ]);
+    const latestSubmission = submissions.length ? submissions[submissions.length - 1] : null;
+    const deterministicFailure = run.status === 'failed'
+      && latestSubmission
+      && latestSubmission.deterministic_passed === false
+      && latestSubmission.progressed_to_llm === false;
+    const reviewerError = run.status === 'reviewer_error'
+      || run.failure_kind === 'reviewer_infrastructure';
+
+    // Load rounds
+    if (rounds.length === 0) {
+      document.getElementById('drawerRounds').innerHTML = deterministicFailure
+        ? renderDeterministicFailure(latestSubmission)
+        : reviewerError
+          ? renderReviewerError(run)
+        : '<div class="empty-state">No rounds recorded</div>';
+    } else {
+      document.getElementById('drawerRounds').innerHTML = rounds.map(rnd => {
+        const cost = rnd.cost_usd != null ? `$${rnd.cost_usd.toFixed(4)}` : 'n/a';
+        return `
+        <div class="round-item">
+          <div class="round-num">${rnd.round_number}</div>
+          <div class="round-body">
+            <div class="round-header">
+              <span class="badge ${rnd.verdict || 'pending'}">${rnd.verdict || 'pending'}</span>
+              <span style="font-size:12px;color:var(--text-dim)">${rnd.model_used}</span>
+            </div>
+            <div class="round-stats">
+              <span>Tokens: ${(rnd.tokens_in + rnd.tokens_out).toLocaleString()}</span>
+              <span>Cost: ${cost}</span>
+              <span>Duration: ${(rnd.duration_ms / 1000).toFixed(1)}s</span>
+              <span>Findings: ${rnd.findings_count}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Load findings for this run
+    if (findings.length === 0) {
+      document.getElementById('drawerFindings').innerHTML = deterministicFailure
+        ? '<div class="empty-state">No LLM findings were recorded because deterministic checks failed before review started.</div>'
+        : reviewerError
+          ? '<div class="empty-state">No findings were recorded because the reviewer infrastructure was unavailable.</div>'
+        : '<div class="empty-state">No findings — clean pass</div>';
+    } else {
+      document.getElementById('drawerFindings').innerHTML = findings.map(f => {
+        const sevColor = f.severity === 'high' ? 'var(--red)' : f.severity === 'medium' ? 'var(--yellow)' : 'var(--text-dim)';
+        const confPct = f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '—';
+        const ruleLinks = (f.rule_refs || []).length > 0
+          ? `<div style="font-size:11px;color:var(--accent);margin-top:4px;">Rules: ${f.rule_refs.join(', ')}</div>`
+          : '';
+        const whyNow = f.why_now
+          ? `<div style="font-size:12px;color:var(--text-dim);margin-top:6px;padding:8px 10px;background:var(--surface);border-radius:4px;border-left:2px solid var(--accent);"><strong style="color:var(--text);">Why now:</strong> ${f.why_now}</div>`
+          : '';
+        return `
+        <div class="finding-card tier-${f.tier}">
+          <div class="finding-header">
+            <span class="badge tier-${f.tier}">${f.tier}</span>
+            <span class="badge status-${f.status}">${f.status}</span>
+            <span style="font-size:12px;color:var(--text-dim)">${f.category}</span>
+            <span style="font-size:11px;color:${sevColor};font-weight:600;">${f.severity || 'medium'}</span>
+            <span style="font-size:11px;color:var(--text-faint);">conf: ${confPct}</span>
+          </div>
+          <div class="finding-file">${f.file_path}${f.line_start ? ':' + f.line_start : ''}</div>
+          <div class="finding-msg">${f.message}</div>
+          ${whyNow}
+          ${f.suggestion ? `<div class="finding-suggestion"><strong>Suggestion:</strong> ${f.suggestion}</div>` : ''}
+          ${ruleLinks}
+          ${f.autofix_safe ? '<div style="font-size:11px;color:var(--green);margin-top:4px;">Autofix safe</div>' : ''}
+        </div>`;
+      }).join('');
+    }
+
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    document.getElementById('drawerRounds').innerHTML = `<div class="empty-state">Error loading: ${err.message}</div>`;
+  }
+}
+
+function closeDrawer() {
+  document.getElementById('reviewDrawer').classList.remove('open');
+}
+
+// ── Event Log ───────────────────────────────────────────────────────────
+
+async function loadEventLog() {
+  try {
+    const events = await apiFetch('/events');
+    document.getElementById('eventCount').textContent = events.length;
+    const el = document.getElementById('eventList');
+    if (!events.length) { el.innerHTML = '<div class="empty-state">No events yet</div>'; return; }
+
+    el.innerHTML = events.slice(0, 100).map(ev => {
+      const payload = ev.payload || {};
+      let detail = Object.entries(payload).map(([k, v]) => `${k}: ${v}`).join(' · ');
+      return `
+        <div class="event-item">
+          <span class="event-time">${fmtDate(ev.created_at)}</span>
+          <span class="event-type">${ev.event_type}</span>
+          <span class="event-detail">${detail || '—'}</span>
+        </div>`;
+    }).join('');
+  } catch {
+    // Events endpoint might not exist yet — add it
+    document.getElementById('eventList').innerHTML = '<div class="empty-state">Event log endpoint not available</div>';
+  }
+}
+
+// ── Verdict Chart ───────────────────────────────────────────────────────
+
+function renderVerdictChart(runs) {
+  const counts = { pass: 0, pass_with_advisories: 0, blocking: 0, escalated: 0 };
+  runs.forEach(r => {
+    const v = r.verdict || r.status;
+    if (v === 'passed' || v === 'pass') counts.pass++;
+    else if (v === 'passed_with_advisories' || v === 'pass_with_advisories') counts.pass_with_advisories++;
+    else if (v in counts) counts[v]++;
+  });
+
+  const ctx = document.getElementById('verdictChart').getContext('2d');
+  if (verdictChart) verdictChart.destroy();
+  if (!runs.length) return;
+
+  verdictChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pass', 'Pass + Advisories', 'Blocking', 'Escalated'],
+      datasets: [{
+        data: [counts.pass, counts.pass_with_advisories, counts.blocking, counts.escalated],
+        backgroundColor: ['rgba(34,197,94,0.8)', 'rgba(234,179,8,0.8)', 'rgba(239,68,68,0.8)', 'rgba(249,115,22,0.8)'],
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#8b8fa3', font: { size: 11 }, padding: 12 } } },
+    },
+  });
+}
+
+// ── Reviewer Model Config ───────────────────────────────────────────────
+
+function openModelModal(projectId) {
+  const project = allProjects.find(p => p.id === projectId);
+  if (!project) return;
+  editingModelProjectId = projectId;
+  document.getElementById('modelModalProject').textContent = project.name;
+  populateModelControls('edit', {
+    provider: project.reviewer_provider || providerConfig?.default_provider || 'openai',
+    model: project.reviewer_model || providerConfig?.default_model || '',
+    effort: project.reviewer_reasoning_effort || providerConfig?.default_reasoning_effort || 'medium',
+  });
+  document.getElementById('modelModal').classList.add('open');
+}
+
+function closeModelModal() {
+  editingModelProjectId = null;
+  document.getElementById('modelModal').classList.remove('open');
+}
+
+async function saveProjectModel() {
+  if (!editingModelProjectId) return;
+  try {
+    await apiPatch(`/projects/${editingModelProjectId}/model`, selectedModelPayload('edit'));
+    showToast('Reviewer model updated');
+    closeModelModal();
+    providerConfig = null;
+    await loadDashboard();
+  } catch (err) {
+    showToast(`Model update failed: ${err.message}`, 'error');
+  }
+}
+
+// ── Onboard / Delete ────────────────────────────────────────────────────
+
+async function onboardProject() {
+  const name = document.getElementById('onboardName').value.trim();
+  const path = document.getElementById('onboardPath').value.trim();
+  const govRaw = document.getElementById('onboardGov').value.trim();
+  if (!name || !path) { showToast('Name and path are required', 'error'); return; }
+
+  const body = { name, repo_path: path, connector_type: 'filesystem', ...selectedModelPayload('onboard') };
+  if (govRaw) body.governance_paths = govRaw.split(',').map(s => s.trim());
+
+  try {
+    const project = await apiPost('/projects', body);
+    showToast(`"${project.name}" onboarded!`);
+    document.getElementById('onboardName').value = '';
+    document.getElementById('onboardPath').value = '';
+    document.getElementById('onboardGov').value = '';
+    populateModelControls('onboard', {});
+    loadDashboard();
+  } catch (err) { showToast(`Failed: ${err.message}`, 'error'); }
+}
+
+async function deleteProject(id, name) {
+  if (!confirm(
+    `Archive project "${name}"?\n\n` +
+    `This hides the registration from active lists only.\n` +
+    `Review history, findings, advisories, and metrics remain preserved in Pattern Pilot.`
+  )) return;
+  try {
+    await apiDelete(`/projects/${id}`);
+    showToast(`"${name}" archived. Review history preserved.`);
+    loadDashboard();
+  } catch (err) { showToast(`Delete failed: ${err.message}`, 'error'); }
+}
+
+// ── Init ────────────────────────────────────────────────────────────────
+
+loadDashboard();
+setInterval(checkHealth, 10000);
+const autoRefreshEnabled = localStorage.getItem(AUTO_REFRESH_STORAGE_KEY) === 'true';
+const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+if (autoRefreshToggle) {
+  autoRefreshToggle.checked = autoRefreshEnabled;
+}
+setAutoRefresh(autoRefreshEnabled);
+</script>
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pattern Pilot | A4 Infographic</title>
+  <style>
+    :root {
+      --bg: #eaf3fb;
+      --sheet: #ffffff;
+      --ink: #14273f;
+      --muted: #4f6a87;
+      --line: #d6e4f2;
+      --blue: #0f78b8;
+      --teal: #13967e;
+      --amber: #e79a1f;
+      --red: #d74e42;
+      --indigo: #3856c8;
+      --shadow: 0 10px 28px rgba(10, 35, 65, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    @page {
+      size: A4 portrait;
+      margin: 7mm;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 0% 0%, #dff0ff 0%, rgba(223, 240, 255, 0) 34%),
+        radial-gradient(circle at 100% 100%, #e6fff8 0%, rgba(230, 255, 248, 0) 36%),
+        var(--bg);
+      font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .sheet {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: var(--sheet);
+      box-shadow: var(--shadow);
+      padding: 7mm;
+      display: grid;
+      grid-template-rows: auto auto auto auto 1fr;
+      gap: 5mm;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 4mm;
+      background: linear-gradient(135deg, #ffffff 20%, #edf7ff 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 45mm;
+      height: 45mm;
+      border-radius: 999px;
+      right: -16mm;
+      top: -16mm;
+      background: radial-gradient(circle, rgba(19, 150, 126, 0.2), rgba(19, 150, 126, 0));
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 8.1mm;
+      letter-spacing: -0.2mm;
+    }
+
+    .sub {
+      margin-top: 1.5mm;
+      color: var(--muted);
+      font-size: 3.2mm;
+      max-width: 155mm;
+    }
+
+    .pill-row {
+      margin-top: 2.2mm;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5mm;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.8mm 2mm;
+      font-size: 2.7mm;
+      color: #2e4a67;
+      background: #fff;
+      font-weight: 700;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 3.2mm;
+      background: #fff;
+    }
+
+    .kicker {
+      margin: 0 0 2mm;
+      font-size: 3.5mm;
+      letter-spacing: 0.1mm;
+    }
+
+    .purpose-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+    }
+
+    .purpose-box {
+      border: 1px solid var(--line);
+      border-left: 1.4mm solid var(--blue);
+      border-radius: 8px;
+      padding: 2.4mm;
+      background: #fbfeff;
+    }
+
+    .purpose-box h3 {
+      margin: 0 0 1mm;
+      font-size: 3.3mm;
+      color: var(--blue);
+    }
+
+    .purpose-box p {
+      margin: 0;
+      font-size: 2.9mm;
+      color: var(--muted);
+    }
+
+    .workflow {
+      border: 1px dashed #bdd5e9;
+      border-radius: 10px;
+      padding: 2.6mm;
+      background: linear-gradient(180deg, #fcfeff, #f6fbff);
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2mm;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 2mm;
+      min-height: 24mm;
+      background: #fff;
+    }
+
+    .step b {
+      display: block;
+      font-size: 2.8mm;
+      margin-bottom: 0.6mm;
+    }
+
+    .step span {
+      font-size: 2.5mm;
+      color: var(--muted);
+    }
+
+    .snum {
+      width: 5mm;
+      height: 5mm;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      color: #fff;
+      font-size: 2.3mm;
+      font-weight: 800;
+      margin-bottom: 0.8mm;
+      background: var(--blue);
+    }
+
+    .gif-lane {
+      margin: 1.8mm 0;
+      height: 4mm;
+      border-top: 0.6mm solid #b5cee2;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gif-lane::before,
+    .gif-lane::after {
+      content: "";
+      position: absolute;
+      width: 4.4mm;
+      height: 4.4mm;
+      top: -2.3mm;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      box-shadow: 0 0 0 1.2mm rgba(19, 150, 126, 0.18);
+      animation: laneMove 3.5s linear infinite;
+    }
+
+    .gif-lane::after {
+      animation-delay: 1.75s;
+    }
+
+    @keyframes laneMove {
+      from { left: -6mm; }
+      to { left: 100%; }
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 3mm;
+    }
+
+    .bars .row {
+      display: grid;
+      grid-template-columns: 34mm 1fr 15mm;
+      gap: 1.6mm;
+      align-items: center;
+      margin-bottom: 1.2mm;
+      font-size: 2.7mm;
+    }
+
+    .bars .label {
+      color: #24425f;
+      font-weight: 700;
+    }
+
+    .track {
+      height: 4.2mm;
+      border-radius: 999px;
+      background: #edf4fb;
+      overflow: hidden;
+      border: 1px solid #deebf6;
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: 999px;
+      transform-origin: left;
+      animation: grow 1.2s ease-out both;
+    }
+
+    .fill.failed { background: var(--red); }
+    .fill.passed { background: var(--teal); }
+    .fill.adv { background: var(--amber); }
+    .fill.err { background: var(--indigo); }
+    .fill.esc { background: #7b4bc4; }
+
+    @keyframes grow {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: 38mm 1fr;
+      gap: 2.2mm;
+      align-items: center;
+    }
+
+    .donut {
+      width: 34mm;
+      height: 34mm;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--red) 0% 70.2%,
+        var(--blue) 70.2% 94.7%,
+        var(--amber) 94.7% 99.0%,
+        var(--teal) 99.0% 100%
+      );
+      position: relative;
+      margin: 0 auto;
+      animation: spinIn 0.9s ease-out;
+    }
+
+    .donut::after {
+      content: "94\A findings";
+      white-space: pre;
+      position: absolute;
+      inset: 6.8mm;
+      border-radius: 50%;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 2.6mm;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    @keyframes spinIn {
+      from { transform: rotate(-70deg) scale(0.8); opacity: 0; }
+      to { transform: rotate(0) scale(1); opacity: 1; }
+    }
+
+    .legend {
+      display: grid;
+      gap: 1.1mm;
+      font-size: 2.6mm;
+    }
+
+    .legend div {
+      display: grid;
+      grid-template-columns: 3.2mm 1fr auto;
+      gap: 1.2mm;
+      align-items: center;
+    }
+
+    .dot {
+      width: 3.2mm;
+      height: 3.2mm;
+      border-radius: 999px;
+    }
+
+    .mini {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm;
+      margin-top: 1.8mm;
+    }
+
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 1.8mm;
+      background: #fbfeff;
+    }
+
+    .mini-card h4 {
+      margin: 0 0 1mm;
+      font-size: 2.8mm;
+      color: #24425f;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 2.5mm;
+    }
+
+    .round-bars {
+      display: flex;
+      align-items: end;
+      gap: 1.3mm;
+      height: 22mm;
+      margin-top: 2mm;
+      padding: 1.4mm;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fcfeff;
+    }
+
+    .rbar {
+      width: 7mm;
+      border-radius: 1.6mm 1.6mm 0 0;
+      background: linear-gradient(180deg, #5aa7d8, #0f78b8);
+      position: relative;
+      transform-origin: bottom;
+      animation: pop 0.8s ease-out both;
+    }
+
+    .rbar span {
+      position: absolute;
+      top: -4.2mm;
+      width: 100%;
+      text-align: center;
+      font-size: 2.2mm;
+      color: #305070;
+      font-weight: 700;
+    }
+
+    .rbar i {
+      position: absolute;
+      bottom: -4.1mm;
+      width: 100%;
+      text-align: center;
+      font-style: normal;
+      font-size: 2.2mm;
+      color: #4b6786;
+      font-weight: 700;
+    }
+
+    @keyframes pop {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+
+    .tests-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2mm;
+    }
+
+    .test-card {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 2mm;
+      background: #fff;
+      min-height: 24mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .test-card h4 {
+      margin: 0 0 1mm;
+      font-size: 2.8mm;
+      color: #22415f;
+    }
+
+    .test-card .v {
+      font-size: 5mm;
+      font-weight: 800;
+      color: var(--teal);
+      line-height: 1;
+      margin-bottom: 0.6mm;
+    }
+
+    .test-card p {
+      margin: 0;
+      font-size: 2.5mm;
+      color: var(--muted);
+    }
+
+    .pulse {
+      position: absolute;
+      right: 1.2mm;
+      top: 1.2mm;
+      width: 3.2mm;
+      height: 3.2mm;
+      border-radius: 999px;
+      background: var(--teal);
+      box-shadow: 0 0 0 0 rgba(19, 150, 126, 0.5);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(19, 150, 126, 0.48); }
+      70% { box-shadow: 0 0 0 5mm rgba(19, 150, 126, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(19, 150, 126, 0); }
+    }
+
+    .intent {
+      margin-top: 1.6mm;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 2mm;
+      background: linear-gradient(180deg, #fff, #f7fcff);
+      font-size: 2.7mm;
+      color: #294868;
+      font-weight: 600;
+    }
+
+    .foot {
+      margin-top: 1.2mm;
+      font-size: 2.3mm;
+      color: #5a7592;
+      display: flex;
+      justify-content: space-between;
+      gap: 2mm;
+    }
+
+    @media screen and (max-width: 1100px) {
+      .sheet {
+        width: 100%;
+        min-height: unset;
+        margin: 0;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="hero">
+      <h1>Pattern Pilot</h1>
+      <div class="sub">Standalone AI quality-control plane: one model writes code, another model reviews the same repo with deterministic checks, governance context, and audit evidence.</div>
+      <div class="pill-row">
+        <span class="pill">MCP Triggered</span>
+        <span class="pill">Model-Agnostic Reviewer</span>
+        <span class="pill">Deterministic First</span>
+        <span class="pill">Compliance + Audit Trail</span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2 class="kicker">Purpose and Intention</h2>
+      <div class="purpose-grid">
+        <article class="purpose-box">
+          <h3>Purpose</h3>
+          <p>Create a practical QC layer for AI-assisted coding that validates code quality before acceptance, without editing target project files.</p>
+        </article>
+        <article class="purpose-box" style="border-left-color: var(--teal);">
+          <h3>Intention</h3>
+          <p>Improve trust in autonomous coding by combining deterministic checks, independent reviewer judgment, and reproducible decision history.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel workflow">
+      <h2 class="kicker">GIF-Style Directional Workflow</h2>
+      <div class="flow-grid">
+        <article class="step"><div class="snum">1</div><b>Code Change</b><span>Writer agent updates target repo files.</span></article>
+        <article class="step"><div class="snum">2</div><b>MCP Submit</b><span>`submit_for_review(project, task, files)`</span></article>
+        <article class="step"><div class="snum">3</div><b>Deterministic Gate</b><span>Lint + typecheck + tests first.</span></article>
+        <article class="step"><div class="snum">4</div><b>Context Bundle</b><span>Diff + governance + decision/task + prior findings.</span></article>
+        <article class="step"><div class="snum">5</div><b>Alt-Model Review</b><span>Independent AI reviewer returns structured findings.</span></article>
+        <article class="step"><div class="snum">6</div><b>Tiered Output</b><span>Blocking / autofix / review / advisory.</span></article>
+        <article class="step"><div class="snum">7</div><b>Fix and Resubmit</b><span>Loop until pass or escalation.</span></article>
+        <article class="step"><div class="snum">8</div><b>Persist Evidence</b><span>Runs, rounds, findings, advisories, events.</span></article>
+      </div>
+      <div class="gif-lane" aria-hidden="true"></div>
+    </section>
+
+    <section class="charts">
+      <article class="panel bars">
+        <h2 class="kicker">Run Status Distribution (n=182)</h2>
+        <div class="row"><div class="label">failed</div><div class="track"><div class="fill failed" style="width:65.4%"></div></div><div>65.4%</div></div>
+        <div class="row"><div class="label">passed</div><div class="track"><div class="fill passed" style="width:22.0%"></div></div><div>22.0%</div></div>
+        <div class="row"><div class="label">pass+advisory</div><div class="track"><div class="fill adv" style="width:9.3%"></div></div><div>9.3%</div></div>
+        <div class="row"><div class="label">reviewer_error</div><div class="track"><div class="fill err" style="width:2.2%"></div></div><div>2.2%</div></div>
+        <div class="row"><div class="label">escalated</div><div class="track"><div class="fill esc" style="width:1.1%"></div></div><div>1.1%</div></div>
+
+        <div class="mini">
+          <div class="mini-card">
+            <h4>Deterministic Gate Failures</h4>
+            <p><b>109 / 277 submissions</b> failed before LLM review<br>(39.4%).</p>
+          </div>
+          <div class="mini-card">
+            <h4>LLM Review Progressed</h4>
+            <p><b>168 / 277 submissions</b> reached model review<br>(60.6%).</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2 class="kicker">Finding Mix + Review Depth</h2>
+        <div class="donut-wrap">
+          <div class="donut" aria-label="Findings tier chart"></div>
+          <div class="legend">
+            <div><span class="dot" style="background:var(--red)"></span><span>blocking</span><b>70.2%</b></div>
+            <div><span class="dot" style="background:var(--blue)"></span><span>recommended_review</span><b>24.5%</b></div>
+            <div><span class="dot" style="background:var(--amber)"></span><span>recommended_autofix</span><b>4.3%</b></div>
+            <div><span class="dot" style="background:var(--teal)"></span><span>advisory</span><b>1.1%</b></div>
+          </div>
+        </div>
+
+        <div class="round-bars" aria-label="Rounds distribution">
+          <div class="rbar" style="height:61.5%"><span>112</span><i>R0</i></div>
+          <div class="rbar" style="height:22%"><span>40</span><i>R1</i></div>
+          <div class="rbar" style="height:8.8%"><span>16</span><i>R2</i></div>
+          <div class="rbar" style="height:4.4%"><span>8</span><i>R3</i></div>
+          <div class="rbar" style="height:2.2%"><span>4</span><i>R4</i></div>
+          <div class="rbar" style="height:1.1%"><span>2</span><i>R5</i></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2 class="kicker">Test Evidence Snapshot</h2>
+      <div class="tests-grid">
+        <article class="test-card">
+          <div class="pulse" aria-hidden="true"></div>
+          <h4>Collected Test Inventory</h4>
+          <div class="v">173</div>
+          <p>Tests collected in <b>1.41s</b><br>across <b>18 test files</b>.</p>
+        </article>
+        <article class="test-card">
+          <div class="pulse" aria-hidden="true" style="animation-delay:0.5s"></div>
+          <h4>Executed Smoke Batch</h4>
+          <div class="v">36/36</div>
+          <p>Subset pass in <b>0.94s</b><br>`test_checks.py` + `test_context_resolver.py`.</p>
+        </article>
+        <article class="test-card">
+          <div class="pulse" aria-hidden="true" style="animation-delay:1s"></div>
+          <h4>Toolchain Baseline</h4>
+          <div class="v" style="font-size:3.7mm; color:var(--blue)">ruff 0.15.7</div>
+          <p>mypy 1.19.1<br>pytest 8.4.2</p>
+        </article>
+      </div>
+
+      <div class="intent">
+        Pattern Pilot's intent is not only to generate findings. It is to create a measurable, repeatable path from code change to compliant acceptance, with clear separation between writing, checking, reviewing, and decision logging.
+      </div>
+
+      <div class="foot">
+        <span>Data snapshot: local Pattern Pilot DB + local test run (2026-04-27)</span>
+        <span>Layout: A4-ready, print-friendly, infographic style</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

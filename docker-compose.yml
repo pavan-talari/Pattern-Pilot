@@ -1,0 +1,36 @@
+services:
+  pattern-pilot-db:
+    image: postgres:16
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_DB: pattern_pilot
+      POSTGRES_USER: pp
+      POSTGRES_PASSWORD: pp_dev
+    volumes:
+      - pp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pp -d pattern_pilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  pattern-pilot-api:
+    build: .
+    ports:
+      - "8100:8100"
+    depends_on:
+      pattern-pilot-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pp:pp_dev@pattern-pilot-db:5432/pattern_pilot
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PP_MAX_ROUNDS: ${PP_MAX_ROUNDS:-3}
+      PP_DEFAULT_REVIEW_PROFILE: ${PP_DEFAULT_REVIEW_PROFILE:-standard}
+      PP_LOG_LEVEL: ${PP_LOG_LEVEL:-INFO}
+    volumes:
+      - .:/app
+      - /Users/pavanktalari/Projects/AmiTara:/projects:ro
+
+volumes:
+  pp_pgdata:
