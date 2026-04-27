@@ -37,5 +37,8 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Local documentation artifacts
+docs/
+
 # Alembic
 pattern_pilot/db/migrations/versions/__pycache__/
